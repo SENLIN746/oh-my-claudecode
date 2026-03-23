@@ -243,6 +243,16 @@ World`);
         expect(detectKeywordsWithType('딥인터뷰 방법 소개해줘')).toHaveLength(0);
       });
 
+      it('Korean expanded informational phrases do not trigger keyword', () => {
+        // "뭔데" (what is it), "어떤 기능이야", "소개 부탁", "알려줄래", "뭐가 달라" are informational
+        expect(detectKeywordsWithType('오토파일럿이 뭔데')).toHaveLength(0);
+        expect(detectKeywordsWithType('안티슬롭이 뭐야')).toHaveLength(0);
+        expect(detectKeywordsWithType('오토파일럿 어떤 기능이야')).toHaveLength(0);
+        expect(detectKeywordsWithType('랄프 소개 부탁해')).toHaveLength(0);
+        expect(detectKeywordsWithType('울트라워크 알려줄래')).toHaveLength(0);
+        expect(detectKeywordsWithType('오토파일럿이 랄프랑 뭐가 달라')).toHaveLength(0);
+      });
+
       it('Korean imperative command with 기능/방법 SHOULD trigger keyword (not filtered)', () => {
         // "기능 켜줘" / "기능으로 진행해줘" — 기능 alone without a question verb is NOT informational
         const autopilotResult = detectKeywordsWithType('오토파일럿 기능 켜고 버그 고쳐줘');
