@@ -90,8 +90,10 @@ if [ -n "$SESSION_ID" ] && [ -d "$OMC_STATE/sessions/$SESSION_ID" ]; then
     "$NOW_ISO" "$MODE" > "$OMC_STATE/sessions/$SESSION_ID/cancel-signal-state.json"
 fi
 
-# Clear legacy state for the target mode
-rm -f "$OMC_STATE/${MODE}-state.json"
+# Clear legacy state only if no session ID (avoid clearing another session's state)
+if [ -z "$SESSION_ID" ]; then
+  rm -f "$OMC_STATE/${MODE}-state.json"
+fi
 ```
 
 ## Auto-Detection
