@@ -463,7 +463,8 @@ cmd_feature() {
     local session_id="${project}:feat-${safe_name}"
 
     psm_create_tmux_session "$session_name" "$worktree_path"
-    psm_launch_claude "$session_name"
+    local feature_prompt="Implement feature \"${feature_name}\" for project ${project}. Working branch: ${branch_name}. Build the feature, add tests, and open a PR when ready: gh pr create --title \"feat: ${feature_name}\""
+    psm_launch_claude "$session_name" "$feature_prompt"
 
     psm_add_session "$session_id" "feature" "$project" "feat-${safe_name}" "$branch_name" "$base" "$session_name" "$worktree_path" "$local_path" "{}"
 
