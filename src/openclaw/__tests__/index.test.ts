@@ -3,6 +3,15 @@ import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
+const execFileSyncMock = vi.hoisted(() => vi.fn());
+
+vi.mock("child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("child_process")>();
+  return {
+    ...actual,
+    execFileSync: execFileSyncMock,
+  };
+});
 
 const mockGetCurrentTmuxSession = vi.fn<() => string | null>(() => null);
 vi.mock("../../notifications/tmux.js", () => ({
@@ -497,6 +506,8 @@ describe("burst dedupe for attached multi-pane sessions", () => {
       success: true,
       statusCode: 200,
     });
+    execFileSyncMock.mockReset();
+    execFileSyncMock.mockReturnValue(Buffer.from(""));
     mockGetCurrentTmuxSession.mockReturnValue(null);
     mockGetCurrentTmuxSession.mockReturnValue("dev-session");
   });
@@ -569,5 +580,23 @@ describe("burst dedupe for attached multi-pane sessions", () => {
     });
 
     expect(wakeGateway).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not suppress keyword-detector events when the tmux session no longer exists", async () => {
+    // Dead-session suppression lives in index.ts (isPaneAlive guard on capture),
+    // not in the dedupe layer. keyword-detector events go through normal burst
+    // dedupe regardless of tmux session liveness.
+    execFileSyncMock.mockImplementation(() => {
+      throw new Error("dead session");
+    });
+
+    const result = await wakeOpenClaw("keyword-detector", {
+      sessionId: "sid-dead",
+      projectPath: projectDir,
+      prompt: "stale pane replay",
+    });
+
+    expect(result).toMatchObject({ success: true });
+    expect(wakeGateway).toHaveBeenCalledOnce();
   });
 });
